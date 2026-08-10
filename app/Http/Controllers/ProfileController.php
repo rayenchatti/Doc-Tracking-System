@@ -38,23 +38,16 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Suppression de compte desactivee.
+     *
+     * Le cahier des charges ne prevoit pas qu'un utilisateur supprime son propre
+     * compte : la desactivation (statut = 'desactive') remplace la suppression,
+     * et elle est reservee a l'administrateur via UserController@destroy.
+     * Une suppression physique casserait aussi les documents et historiques qui
+     * referencent cet utilisateur.
      */
     public function destroy(Request $request): RedirectResponse
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
-
-        $user = $request->user();
-
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
+        abort(403, "La suppression de compte n'est pas autorisée. Contactez un administrateur.");
     }
 }
