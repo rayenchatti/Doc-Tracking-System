@@ -167,6 +167,11 @@ Le socle commun est terminé : migrations, modèles, seeders, authentification, 
 **Les 6 modèles Eloquent existent déjà avec toutes leurs relations**, donc pas besoin de
 les recréer.
 
+> ⚠️ **À lire avant de coder :** [DECISIONS.md](DECISIONS.md) contient une question
+> laissée ouverte par le cahier des charges — *quels documents un agent peut-il voir ?*
+> Elle concerne `DocumentController`, `RechercheController` et `SuiviController`.
+> À trancher **avant** d'écrire les requêtes, sinon il faudra les réécrire.
+
 1. Créer une branche :
    ```bash
    git checkout -b module-documents
