@@ -1,59 +1,219 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Gestion et suivi des documents administratifs
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Application web de gestion documentaire — Projet de Fin d'Études (Informatique de Gestion).
 
-## About Laravel
+Développée en binôme :
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Membre | Périmètre | Besoins fonctionnels |
+|---|---|---|
+| **Yassine** (Membre 1) | Authentification, Utilisateurs, Dashboard, Statistiques | BF01, BF02, BF10, BF11 |
+| **Rayen** (Membre 2) | Documents, Recherche, Suivi, Archivage | BF03–BF09, BF12 |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 1. Prérequis
 
-## Learning Laravel
+| Outil | Version requise |
+|---|---|
+| PHP | **8.3 ou supérieur** (Laravel 13 ne fonctionne pas avec PHP 8.0) |
+| Composer | 2.x |
+| MySQL | via XAMPP |
+| Node.js | uniquement si tu modifies les assets Vite |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+> **Attention — XAMPP :** XAMPP livre PHP 8.0, ce qui est **trop ancien** pour Laravel 13.
+> Il faut installer PHP 8.3 séparément (par ex. dans `C:\php83`) et l'ajouter au PATH.
+> On continue en revanche d'utiliser **MySQL de XAMPP** normalement.
+>
+> Vérifier la version active : `php -v` doit afficher 8.3.x.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 2. Installation (à faire par chaque membre après le clone)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+git clone https://github.com/rayenchatti/PFE-AZIZ.git
+cd PFE-AZIZ
 
-### Premium Partners
+composer install
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+cp .env.example .env          # sous Windows : copy .env.example .env
+php artisan key:generate
+```
 
-## Contributing
+Démarrer **MySQL** depuis le panneau XAMPP, puis créer la base :
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```sql
+CREATE DATABASE gestion_documents CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-## Code of Conduct
+Vérifier que le `.env` contient bien :
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=gestion_documents
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-## Security Vulnerabilities
+Créer les tables, les données de départ et le lien de stockage :
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan migrate --seed
+php artisan storage:link
+php artisan serve
+```
 
-## License
+L'application est disponible sur **http://127.0.0.1:8000**.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Comptes de test (créés par les seeders)
+
+| Rôle | E-mail | Mot de passe |
+|---|---|---|
+| Administrateur | `admin@gmail.com` | `password` |
+| Agent | `agent@gmail.com` | `password` |
+
+> **Point de contrôle 1 :** ne pas commencer les modules tant que les deux membres
+> n'arrivent pas à se connecter en local avec le compte admin.
+
+---
+
+## 3. Stack technique
+
+| Couche | Technologie |
+|---|---|
+| Back-end | Laravel 13 |
+| Front-end | Blade + **Bootstrap 5** (via CDN) |
+| Authentification | Laravel Breeze (stack blade) |
+| Base de données | MySQL |
+| Graphiques | Chart.js (CDN, page Statistiques) |
+
+Breeze installe Tailwind par défaut, mais **le projet utilise Bootstrap 5** conformément au
+cahier des charges. Les vues du projet (`layouts/app.blade.php`, `auth/login.blade.php`,
+`users/*`, `statistiques/*`) sont écrites en Bootstrap.
+
+**Charte graphique :** palette inspirée de La Poste Tunisienne — bleu marine `#1B2073`
+et jaune doré `#F5C518`, définis comme variables CSS dans `layouts/app.blade.php`.
+
+---
+
+## 4. Base de données
+
+Six tables principales :
+
+| Table | Rôle |
+|---|---|
+| `users` | Comptes (`nom`, `prenom`, `email`, `telephone`, `role`, `statut`) |
+| `services` | Table de référence — services de l'organisation |
+| `type_documents` | Table de référence — catégories de documents |
+| `statuts` | Les 4 états du cycle de vie |
+| `documents` | Documents administratifs |
+| `historiques` | Journal des changements de statut (pivot Suivi ↔ Statistiques) |
+
+### Cycle de vie d'un document (ordre strict, pas de saut d'étape)
+
+```
+En attente  →  En cours  →  Traité  →  Archivé
+```
+
+Chaque changement de statut **doit** créer une ligne dans `historiques`.
+
+---
+
+## 5. Organisation du code
+
+```
+app/
+  Models/              User, Document, Service, TypeDocument, Statut, Historique
+  Http/
+    Middleware/
+      AdminMiddleware.php    alias 'admin'        → réserve une route aux administrateurs
+      CompteActif.php        alias 'compte.actif' → déconnecte un compte désactivé
+    Controllers/
+      UserController.php         (Membre 1)
+      DashboardController.php    (Membre 1)
+      StatistiqueController.php  (Membre 1)
+      DocumentController.php     (Membre 2 — à créer)
+      RechercheController.php    (Membre 2 — à créer)
+      SuiviController.php        (Membre 2 — à créer)
+      ArchivageController.php    (Membre 2 — à créer)
+resources/views/
+  layouts/app.blade.php    layout commun (navbar + sidebar selon le rôle)
+  auth/login.blade.php
+  dashboard.blade.php
+  users/                   index, create, edit, _form
+  statistiques/index.blade.php
+  documents/               (Membre 2 — à créer)
+  recherche/               (Membre 2 — à créer)
+  archivage/               (Membre 2 — à créer)
+routes/web.php             sections commentées par module
+```
+
+Les alias de middleware sont enregistrés dans `bootstrap/app.php`
+(Laravel 13 n'a plus de fichier `app/Http/Kernel.php`).
+
+Seeders : `StatutSeeder`, `AdminUserSeeder`, `ServiceSeeder`, `TypeDocumentSeeder`,
+appelés depuis `DatabaseSeeder`.
+
+> Le modèle `User` n'a **pas** de colonne `name` : elle est calculée à partir de
+> `prenom` + `nom` via l'accesseur `getNameAttribute()`. Ne pas écrire dans `name`.
+
+---
+
+## 6. Pour Rayen — par où commencer
+
+Le socle commun est terminé : migrations, modèles, seeders, authentification, layout.
+**Les 6 modèles Eloquent existent déjà avec toutes leurs relations**, donc pas besoin de
+les recréer.
+
+1. Créer une branche :
+   ```bash
+   git checkout -b module-documents
+   ```
+2. Dans [routes/web.php](routes/web.php), **décommenter** le bloc
+   « Module Documents / Recherche / Suivi / Archivage » déjà préparé — les noms de routes
+   attendus par la sidebar y sont déjà écrits.
+3. Créer les contrôleurs et les vues correspondants.
+
+Relations déjà disponibles :
+
+```php
+$document->typeDocument;   // App\Models\TypeDocument
+$document->statut;         // App\Models\Statut
+$document->utilisateur;    // App\Models\User (responsable)
+$document->service;        // App\Models\Service
+$document->historiques;    // App\Models\Historique[]
+
+Statut::ORDRE;             // ['En attente', 'En cours', 'Traité', 'Archivé']
+```
+
+Points à respecter :
+
+- À la création d'un document : statut initial = **En attente**, et créer une ligne
+  `historiques` (`ancien_statut_id = null`, `nouveau_statut_id` = En attente).
+- Upload des fichiers vers `storage/app/public/documents` (`php artisan storage:link` déjà fait).
+- Ne pas modifier la section « Membre 1 » de `routes/web.php` — ça évite les conflits Git.
+- Les liens Documents / Recherche / Archivage sont **déjà dans la sidebar** : ils pointent
+  vers `#` tant que les routes n'existent pas, et s'activeront automatiquement ensuite.
+
+---
+
+## 7. Hors périmètre
+
+À ne pas ajouter au projet :
+
+- Notifications temps réel (optionnel — uniquement s'il reste du temps, en tout dernier)
+- API REST / application mobile
+- Permissions plus fines que `admin` / `agent`
+- Tout package d'authentification ou de rôles autre que Breeze + colonne `role`
+
+---
+
+## 8. Commandes utiles
+
+```bash
+php artisan migrate:fresh --seed   # remettre la base à zéro et recharger les données de test
+php artisan route:list             # lister toutes les routes
+php artisan optimize:clear         # vider les caches (config, routes, vues)
+```

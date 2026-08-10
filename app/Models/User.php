@@ -50,6 +50,11 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isActif(): bool
+    {
+        return $this->statut === 'actif';
+    }
+
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class, 'utilisateur_id');

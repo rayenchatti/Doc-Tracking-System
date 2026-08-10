@@ -9,6 +9,12 @@ class Statut extends Model
 {
     public $timestamps = false;
 
+    /**
+     * Cycle de vie fixe d'un document, dans l'ordre.
+     * En attente -> En cours -> Traité -> Archivé
+     */
+    public const ORDRE = ['En attente', 'En cours', 'Traité', 'Archivé'];
+
     protected $fillable = [
         'nom',
     ];
