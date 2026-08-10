@@ -8,7 +8,11 @@ Toute décision ici doit être **validée par les deux membres** avant d'être c
 
 ## D01 — Quels documents un agent peut-il voir ?
 
-**Statut : proposition — à valider par Rayen (Membre 2)**
+**Statut : TRANCHÉ — Option A retenue, appliquée dans le code**
+
+> Les deux membres ont abouti indépendamment à la même règle :
+> `DocumentController@index` (commit `59da389`, Membre 2) ne filtre pas par
+> `utilisateur_id`. Un agent voit donc tous les documents non archivés.
 
 ### Le problème
 
@@ -90,5 +94,5 @@ et le signaler ici, car cela contredit le point 8 du plan d'implémentation.
 
 | Membre | Décision D01 | Date |
 |---|---|---|
-| Yassine (Membre 1) | Option A proposée | 10/08/2026 |
-| Rayen (Membre 2) | _à compléter_ | |
+| Yassine (Membre 1) | Option A | 10/08/2026 |
+| Rayen (Membre 2) | Option A (appliquée dans `59da389`) | 10/08/2026 |
