@@ -52,23 +52,21 @@ Route::middleware(['auth', 'compte.actif'])->group(function () {
     |----------------------------------------------------------------------
     | Module Documents / Recherche / Suivi / Archivage - Membre 2 (Rayen)
     |----------------------------------------------------------------------
-    | A decommenter et completer par Membre 2. Ne pas modifier la section
-    | Membre 1 ci-dessus pour eviter les conflits Git.
-    |
-    | Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
-    | Route::get('/documents/create', [DocumentController::class, 'create'])->name('documents.create');
-    | Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
-    | Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
-    | Route::get('/documents/{document}/edit', [DocumentController::class, 'edit'])->name('documents.edit');
-    | Route::put('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
-    |
-    | Route::get('/recherche', [RechercheController::class, 'index'])->name('recherche.index');
-    |
-    | Route::get('/documents/{document}/suivi', [SuiviController::class, 'show'])->name('suivi.show');
-    | Route::patch('/documents/{document}/suivi', [SuiviController::class, 'update'])->name('suivi.update');
-    |
-    | Route::get('/archivage', [ArchivageController::class, 'index'])->name('archivage.index');
     */
+    Route::get('/documents', [\App\Http\Controllers\DocumentController::class, 'index'])->name('documents.index');
+    Route::get('/documents/create', [\App\Http\Controllers\DocumentController::class, 'create'])->name('documents.create');
+    Route::post('/documents', [\App\Http\Controllers\DocumentController::class, 'store'])->name('documents.store');
+    Route::get('/documents/{document}', [\App\Http\Controllers\DocumentController::class, 'show'])->name('documents.show');
+    Route::get('/documents/{document}/edit', [\App\Http\Controllers\DocumentController::class, 'edit'])->name('documents.edit');
+    Route::put('/documents/{document}', [\App\Http\Controllers\DocumentController::class, 'update'])->name('documents.update');
+    Route::delete('/documents/{document}', [\App\Http\Controllers\DocumentController::class, 'destroy'])->name('documents.destroy');
+
+    Route::get('/recherche', [\App\Http\Controllers\RechercheController::class, 'index'])->name('recherche.index');
+
+    Route::get('/documents/{document}/suivi', [\App\Http\Controllers\SuiviController::class, 'show'])->name('suivi.show');
+    Route::patch('/documents/{document}/suivi', [\App\Http\Controllers\SuiviController::class, 'update'])->name('suivi.update');
+
+    Route::get('/archivage', [\App\Http\Controllers\ArchivageController::class, 'index'])->name('archivage.index');
 });
 
 require __DIR__.'/auth.php';
