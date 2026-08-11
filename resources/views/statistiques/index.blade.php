@@ -130,19 +130,52 @@
         </div>
     </div>
 
-    {{-- Graphiques : affiches uniquement lorsqu'il y a des donnees reelles --}}
+    {{-- Graphique interactif : affiche uniquement lorsqu'il y a des donnees reelles --}}
     @if ($totalDocuments > 0)
-        <div class="row g-3 mt-1">
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">Graphique — par statut</div>
-                    <div class="card-body"><canvas id="chartStatut" height="200"></canvas></div>
+        <div class="card mt-3">
+            <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span><i class="bi bi-graph-up me-1"></i> Graphique interactif</span>
+
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    {{-- Filtre : quelle donnee afficher --}}
+                    <div class="input-group input-group-sm" style="width: auto;">
+                        <label class="input-group-text" for="filtreDonnees">Données</label>
+                        <select id="filtreDonnees" class="form-select form-select-sm">
+                            <option value="statut">Par statut</option>
+                            <option value="type">Par type de document</option>
+                            <option value="service">Par service</option>
+                            <option value="utilisateur">Par responsable</option>
+                        </select>
+                    </div>
+
+                    {{-- Filtre : type de graphique --}}
+                    <div class="input-group input-group-sm" style="width: auto;">
+                        <label class="input-group-text" for="filtreType">Type</label>
+                        <select id="filtreType" class="form-select form-select-sm">
+                            <option value="bar">Barres verticales</option>
+                            <option value="horizontalBar">Barres horizontales</option>
+                            <option value="line">Courbe</option>
+                            <option value="doughnut">Anneau</option>
+                            <option value="pie">Camembert</option>
+                            <option value="polarArea">Aire polaire</option>
+                            <option value="radar">Radar</option>
+                        </select>
+                    </div>
+
+                    <button type="button" id="btnResetZoom" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrows-angle-contract me-1"></i> Réinitialiser le zoom
+                    </button>
                 </div>
             </div>
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">Graphique — par service</div>
-                    <div class="card-body"><canvas id="chartService" height="200"></canvas></div>
+
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Molette de la souris pour zoomer, cliquer-glisser pour se déplacer sur les axes X et Y.
+                    Le zoom est disponible sur les graphiques en barres et en courbe.
+                </p>
+                <div style="height: 420px;">
+                    <canvas id="chartInteractif"></canvas>
                 </div>
             </div>
         </div>
@@ -152,37 +185,125 @@
 @push('scripts')
     @if ($totalDocuments > 0)
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+        {{-- Plugin de zoom / deplacement sur les axes (molette + cliquer-glisser) --}}
+        <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
         <script>
             const navy = '#1B2073';
             const gold = '#F5C518';
+            const palette = [gold, navy, '#4A55C4', '#8A90AE', '#E8A33D',
+                             '#5C67D1', '#2F3699', '#B9BDD4'];
 
-            new Chart(document.getElementById('chartStatut'), {
-                type: 'doughnut',
-                data: {
+            // Jeux de donnees fournis par StatistiqueController (requetes groupBy).
+            const donnees = {
+                statut: {
+                    titre: 'Documents par statut',
                     labels: @json($parStatut->pluck('libelle')),
-                    datasets: [{
-                        data: @json($parStatut->pluck('total')),
-                        backgroundColor: [gold, '#4A55C4', navy, '#8A90AE'],
-                    }]
+                    valeurs: @json($parStatut->pluck('total')),
                 },
-                options: { plugins: { legend: { position: 'bottom' } } }
-            });
-
-            new Chart(document.getElementById('chartService'), {
-                type: 'bar',
-                data: {
+                type: {
+                    titre: 'Documents par type',
+                    labels: @json($parType->pluck('libelle')),
+                    valeurs: @json($parType->pluck('total')),
+                },
+                service: {
+                    titre: 'Documents par service',
                     labels: @json($parService->pluck('libelle')),
-                    datasets: [{
-                        label: 'Documents',
-                        data: @json($parService->pluck('total')),
-                        backgroundColor: navy,
-                    }]
+                    valeurs: @json($parService->pluck('total')),
                 },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                utilisateur: {
+                    titre: 'Documents par responsable',
+                    labels: @json($parUtilisateur->pluck('libelle')),
+                    valeurs: @json($parUtilisateur->pluck('total')),
+                },
+            };
+
+            // Le zoom n'a de sens que sur les graphiques a axes.
+            const TYPES_AVEC_AXES = ['bar', 'horizontalBar', 'line'];
+
+            const selectDonnees = document.getElementById('filtreDonnees');
+            const selectType = document.getElementById('filtreType');
+            const btnReset = document.getElementById('btnResetZoom');
+            let graphique = null;
+
+            function construireConfig() {
+                const jeu = donnees[selectDonnees.value];
+                const typeChoisi = selectType.value;
+                const aDesAxes = TYPES_AVEC_AXES.includes(typeChoisi);
+
+                // 'horizontalBar' n'existe plus dans Chart.js v4 : c'est un 'bar'
+                // avec indexAxis = 'y'.
+                const typeChartJs = typeChoisi === 'horizontalBar' ? 'bar' : typeChoisi;
+                const couleurs = aDesAxes ? navy : palette;
+
+                const config = {
+                    type: typeChartJs,
+                    data: {
+                        labels: jeu.labels,
+                        datasets: [{
+                            label: 'Documents',
+                            data: jeu.valeurs,
+                            backgroundColor: couleurs,
+                            borderColor: typeChoisi === 'line' ? navy : '#ffffff',
+                            borderWidth: typeChoisi === 'line' ? 2 : 1,
+                            fill: false,
+                            tension: 0.3,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: jeu.titre, font: { size: 15 } },
+                            legend: {
+                                display: !aDesAxes,
+                                position: 'bottom',
+                            },
+                            zoom: {
+                                zoom: {
+                                    wheel: { enabled: aDesAxes },
+                                    pinch: { enabled: aDesAxes },
+                                    mode: 'xy',
+                                },
+                                pan: { enabled: aDesAxes, mode: 'xy' },
+                            },
+                        },
+                    }
+                };
+
+                if (typeChoisi === 'horizontalBar') {
+                    config.options.indexAxis = 'y';
+                }
+
+                if (aDesAxes) {
+                    config.options.scales = {
+                        x: { beginAtZero: true, ticks: { precision: 0 } },
+                        y: { beginAtZero: true, ticks: { precision: 0 } },
+                    };
+                }
+
+                return config;
+            }
+
+            function dessiner() {
+                if (graphique) {
+                    graphique.destroy();
+                }
+                graphique = new Chart(document.getElementById('chartInteractif'), construireConfig());
+
+                // Le bouton de reinitialisation ne sert que si le zoom est actif.
+                btnReset.disabled = !TYPES_AVEC_AXES.includes(selectType.value);
+            }
+
+            selectDonnees.addEventListener('change', dessiner);
+            selectType.addEventListener('change', dessiner);
+            btnReset.addEventListener('click', () => {
+                if (graphique && typeof graphique.resetZoom === 'function') {
+                    graphique.resetZoom();
                 }
             });
+
+            dessiner();
         </script>
     @endif
 @endpush

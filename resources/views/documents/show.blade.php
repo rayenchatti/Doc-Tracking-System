@@ -67,6 +67,27 @@
 
                     <hr class="my-4">
 
+                    @if($document->is_anomalie || $document->montant !== null)
+                        <div class="alert {{ $document->is_anomalie ? 'alert-danger' : 'alert-secondary' }} d-flex align-items-center gap-3">
+                            @if($document->is_anomalie)
+                                <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                            @else
+                                <i class="bi bi-cash-coin fs-4"></i>
+                            @endif
+                            <div>
+                                @if($document->is_anomalie)
+                                    <div class="fw-bold">Écart / anomalie comptable signalé</div>
+                                @endif
+                                @if($document->montant !== null)
+                                    <div>
+                                        Montant de l'opération / écart :
+                                        <strong>{{ number_format($document->montant, 3, ',', ' ') }} TND</strong>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
                     <h6 class="fw-bold mb-2">Description</h6>
                     <p class="text-muted bg-light p-3 rounded-2 mb-0">{{ $document->description ?: 'Aucune description.' }}</p>
 

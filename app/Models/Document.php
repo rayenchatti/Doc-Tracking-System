@@ -18,7 +18,18 @@ class Document extends Model
         'statut_id',
         'utilisateur_id',
         'service_id',
+        'is_anomalie',
+        'montant',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'date_document' => 'date',
+            'is_anomalie' => 'boolean',
+            'montant' => 'decimal:3',
+        ];
+    }
 
     public function typeDocument(): BelongsTo
     {

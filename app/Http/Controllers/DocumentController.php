@@ -13,6 +13,17 @@ use Illuminate\Support\Facades\Storage;
 class DocumentController extends Controller
 {
     /**
+     * Types MIME reellement acceptes pour un fichier joint.
+     * application/zip est tolere car sous Windows/XAMPP un .docx est parfois
+     * detecte ainsi ; l'extension reste verifiee en parallele par la regle 'mimes'.
+     */
+    private const MIMETYPES_AUTORISES = 'application/pdf,'
+        .'application/msword,'
+        .'application/vnd.openxmlformats-officedocument.wordprocessingml.document,'
+        .'application/zip,'
+        .'image/png,image/jpeg';
+
+    /**
      * Liste des documents actifs (exclut les documents archivés).
      */
     public function index(Request $request)
@@ -56,7 +67,17 @@ class DocumentController extends Controller
             'date_document' => 'required|date',
             'service_id' => 'required|exists:services,id',
             'description' => 'nullable|string',
-            'fichier' => 'nullable|file|mimes:pdf,doc,docx,png,jpg,jpeg|max:10240',
+            // 'mimetypes' complete 'mimes' : sous Windows/XAMPP la detection MIME
+            // de Symfony renvoie parfois application/zip pour un .docx.
+            'fichier' => [
+                'nullable',
+                'file',
+                'max:10240',
+                'extensions:pdf,doc,docx,png,jpg,jpeg',
+                'mimetypes:'.self::MIMETYPES_AUTORISES,
+            ],
+            'is_anomalie' => 'nullable|boolean',
+            'montant' => 'nullable|numeric|min:0',
         ]);
 
         $filePath = null;
@@ -74,6 +95,8 @@ class DocumentController extends Controller
             'fichier' => $filePath,
             'statut_id' => 1, // En attente
             'utilisateur_id' => auth()->id(),
+            'is_anomalie' => $request->boolean('is_anomalie'),
+            'montant' => $validated['montant'] ?? null,
         ]);
 
         // Journalisation initiale dans la table historiques
@@ -120,7 +143,15 @@ class DocumentController extends Controller
             'date_document' => 'required|date',
             'service_id' => 'required|exists:services,id',
             'description' => 'nullable|string',
-            'fichier' => 'nullable|file|mimes:pdf,doc,docx,png,jpg,jpeg|max:10240',
+            'fichier' => [
+                'nullable',
+                'file',
+                'max:10240',
+                'extensions:pdf,doc,docx,png,jpg,jpeg',
+                'mimetypes:'.self::MIMETYPES_AUTORISES,
+            ],
+            'is_anomalie' => 'nullable|boolean',
+            'montant' => 'nullable|numeric|min:0',
         ]);
 
         if ($request->hasFile('fichier')) {
@@ -129,6 +160,11 @@ class DocumentController extends Controller
             }
             $validated['fichier'] = $request->file('fichier')->store('documents', 'public');
         }
+
+        // Une case a cocher non cochee n'est pas envoyee par le navigateur :
+        // sans cette ligne, decocher l'anomalie ne l'enlevait jamais.
+        $validated['is_anomalie'] = $request->boolean('is_anomalie');
+        $validated['montant'] = $validated['montant'] ?? null;
 
         $document->update($validated);
 
@@ -140,6 +176,12 @@ class DocumentController extends Controller
      */
     public function destroy(Document $document)
     {
+        // Reserve a l'administrateur : la suppression efface aussi en cascade
+        // l'historique du document, donc toute la tracabilite de son traitement.
+        if (! auth()->user()->isAdmin()) {
+            abort(403, "Seul un administrateur peut supprimer un document.");
+        }
+
         if ($document->fichier && Storage::disk('public')->exists($document->fichier)) {
             Storage::disk('public')->delete($document->fichier);
         }

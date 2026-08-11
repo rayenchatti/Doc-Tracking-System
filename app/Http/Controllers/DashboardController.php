@@ -34,11 +34,17 @@ class DashboardController extends Controller
 
         $totalUtilisateurs = User::where('statut', 'actif')->count();
 
+        // Suivi des ecarts / anomalies comptables.
+        $nbAnomalies = Document::where('is_anomalie', true)->count();
+        $montantAnomalies = (float) Document::where('is_anomalie', true)->sum('montant');
+
         return view('dashboard', compact(
             'parStatut',
             'totalDocuments',
             'derniersDocuments',
-            'totalUtilisateurs'
+            'totalUtilisateurs',
+            'nbAnomalies',
+            'montantAnomalies'
         ));
     }
 }

@@ -55,6 +55,11 @@
                                     <a href="{{ route('documents.show', $document) }}" class="text-decoration-none">
                                         {{ $document->nom }}
                                     </a>
+                                    @if($document->is_anomalie)
+                                        <span class="badge bg-danger ms-1" title="Écart / anomalie comptable signalé">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> Anomalie
+                                        </span>
+                                    @endif
                                 </td>
                                 <td><span class="badge bg-light text-dark border">{{ $document->typeDocument->nom ?? '—' }}</span></td>
                                 <td>{{ $document->service->nom ?? '—' }}</td>

@@ -26,11 +26,10 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
+        // La table users n'a pas de colonne email_verified_at (voir la migration
+        // create_users_table) : y ecrire provoquait une erreur SQL des qu'un
+        // utilisateur changeait son adresse e-mail.
         $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
 
         $request->user()->save();
 

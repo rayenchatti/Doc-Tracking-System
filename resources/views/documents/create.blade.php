@@ -69,6 +69,36 @@
                     @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
+                {{-- Suivi des ecarts / anomalies comptables --}}
+                <div class="card bg-light border-0 mb-3">
+                    <div class="card-body py-3">
+                        <div class="form-check mb-3">
+                            <input type="hidden" name="is_anomalie" value="0">
+                            <input class="form-check-input" type="checkbox" name="is_anomalie" value="1"
+                                   id="is_anomalie" @checked(old('is_anomalie'))>
+                            <label class="form-check-label fw-semibold" for="is_anomalie">
+                                <i class="bi bi-exclamation-triangle text-danger me-1"></i>
+                                Signaler un écart / anomalie comptable
+                            </label>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-5">
+                                <label for="montant" class="form-label small fw-semibold">
+                                    Montant de l'opération / écart (TND)
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" step="0.001" min="0" name="montant" id="montant"
+                                           class="form-control @error('montant') is-invalid @enderror"
+                                           value="{{ old('montant') }}" placeholder="0.000">
+                                    <span class="input-group-text">TND</span>
+                                    @error('montant') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mb-4">
                     <label for="fichier" class="form-label small fw-semibold">Fichier numérique (PDF, Word, Image — max 10 Mo)</label>
                     <input type="file" name="fichier" id="fichier" class="form-control @error('fichier') is-invalid @enderror">
