@@ -13,6 +13,9 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             ServiceSeeder::class,
             TypeDocumentSeeder::class,
+            // Doit rester en dernier : depend des statuts, services, types
+            // et comptes crees au-dessus.
+            DocumentSeeder::class,
         ]);
     }
 }
