@@ -1,6 +1,6 @@
-# Gestion et suivi des documents administratifs
+# Dossia
 
-Application web de gestion documentaire — Projet de Fin d'Études (Informatique de Gestion).
+Application web de gestion et de suivi des documents administratifs — Projet de Fin d'Études (Informatique de Gestion).
 
 Développée en binôme :
 
